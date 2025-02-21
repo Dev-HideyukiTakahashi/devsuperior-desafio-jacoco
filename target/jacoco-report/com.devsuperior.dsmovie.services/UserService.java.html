@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dsmovie</a> &gt; <a href="index.source.html" class="el_package">com.devsuperior.dsmovie.services</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package com.devsuperior.dsmovie.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import com.devsuperior.dsmovie.entities.RoleEntity;
+import com.devsuperior.dsmovie.entities.UserEntity;
+import com.devsuperior.dsmovie.projections.UserDetailsProjection;
+import com.devsuperior.dsmovie.repositories.UserRepository;
+import com.devsuperior.dsmovie.utils.CustomUserUtil;
+
+@Service
+<span class="fc" id="L18">public class UserService implements UserDetailsService {</span>
+
+	@Autowired
+	private UserRepository repository;
+	
+	@Autowired
+	private CustomUserUtil userUtil;
+
+	public UserEntity authenticated() {
+		try {
+<span class="fc" id="L28">			String username = userUtil.getLoggedUsername();</span>
+<span class="fc" id="L29">			return repository.findByUsername(username).get();</span>
+		}
+<span class="fc" id="L31">		catch (Exception e) {</span>
+<span class="fc" id="L32">			throw new UsernameNotFoundException(&quot;Invalid user&quot;);</span>
+		}
+	}
+	
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		
+<span class="fc" id="L39">		List&lt;UserDetailsProjection&gt; result = repository.searchUserAndRolesByUsername(username);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">		if (result.size() == 0) {</span>
+<span class="fc" id="L41">			throw new UsernameNotFoundException(&quot;Email not found&quot;);</span>
+		}
+		
+<span class="fc" id="L44">		UserEntity user = new UserEntity();</span>
+<span class="fc" id="L45">		user.setUsername(result.get(0).getUsername());</span>
+<span class="fc" id="L46">		user.setPassword(result.get(0).getPassword());</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">		for (UserDetailsProjection projection : result) {</span>
+<span class="fc" id="L48">			user.addRole(new RoleEntity(projection.getRoleId(), projection.getAuthority()));</span>
+<span class="fc" id="L49">		}</span>
+		
+<span class="fc" id="L51">		return user;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

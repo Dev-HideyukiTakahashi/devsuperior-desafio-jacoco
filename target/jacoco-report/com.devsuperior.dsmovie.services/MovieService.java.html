@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovieService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dsmovie</a> &gt; <a href="index.source.html" class="el_package">com.devsuperior.dsmovie.services</a> &gt; <span class="el_source">MovieService.java</span></div><h1>MovieService.java</h1><pre class="source lang-java linenums">package com.devsuperior.dsmovie.services;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.devsuperior.dsmovie.dto.MovieDTO;
+import com.devsuperior.dsmovie.entities.MovieEntity;
+import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.DatabaseException;
+import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
+
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+<span class="fc" id="L19">public class MovieService {</span>
+
+	@Autowired
+	private MovieRepository repository;
+
+	@Transactional(readOnly = true)
+	public Page&lt;MovieDTO&gt; findAll(String title, Pageable pageable) {
+<span class="fc" id="L26">		Page&lt;MovieEntity&gt; result = repository.searchByTitle(title, pageable);</span>
+<span class="fc" id="L27">		return result.map(x -&gt; new MovieDTO(x));</span>
+	}
+
+	@Transactional(readOnly = true)
+	public MovieDTO findById(Long id) {
+<span class="fc" id="L32">		MovieEntity result = repository.findById(id)</span>
+<span class="fc" id="L33">				.orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Recurso não encontrado&quot;));</span>
+<span class="fc" id="L34">		return new MovieDTO(result);</span>
+	}
+
+	@Transactional
+	public MovieDTO insert(MovieDTO dto) {
+<span class="fc" id="L39">		MovieEntity entity = new MovieEntity();</span>
+<span class="fc" id="L40">		copyDtoToEntity(dto, entity);</span>
+<span class="fc" id="L41">		entity = repository.save(entity);</span>
+<span class="fc" id="L42">		return new MovieDTO(entity);</span>
+	}
+
+	@Transactional
+	public MovieDTO update(Long id, MovieDTO dto) {
+		try {
+<span class="fc" id="L48">			MovieEntity entity = repository.getReferenceById(id);</span>
+<span class="fc" id="L49">			copyDtoToEntity(dto, entity);</span>
+<span class="fc" id="L50">			entity = repository.save(entity);</span>
+<span class="fc" id="L51">			return new MovieDTO(entity);</span>
+<span class="fc" id="L52">		} catch (EntityNotFoundException e) {</span>
+<span class="fc" id="L53">			throw new ResourceNotFoundException(&quot;Recurso não encontrado&quot;);</span>
+		}
+	}
+
+	public void delete(Long id) {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">		if (!repository.existsById(id))</span>
+<span class="fc" id="L59">			throw new ResourceNotFoundException(&quot;Recurso não encontrado&quot;);</span>
+		try {
+<span class="fc" id="L61">			repository.deleteById(id);</span>
+<span class="fc" id="L62">		} catch (DataIntegrityViolationException e) {</span>
+<span class="fc" id="L63">			throw new DatabaseException(&quot;Falha de integridade referencial&quot;);</span>
+<span class="fc" id="L64">		}</span>
+<span class="fc" id="L65">	}</span>
+
+	private void copyDtoToEntity(MovieDTO dto, MovieEntity entity) {
+<span class="fc" id="L68">		entity.setTitle(dto.getTitle());</span>
+<span class="fc" id="L69">		entity.setScore(dto.getScore());</span>
+<span class="fc" id="L70">		entity.setCount(dto.getCount());</span>
+<span class="fc" id="L71">		entity.setImage(dto.getImage());</span>
+<span class="fc" id="L72">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
